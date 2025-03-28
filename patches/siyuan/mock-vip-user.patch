@@ -11,28 +11,45 @@ index 9010350078560bb298de72bc73d54e51db60f21b..dfe9ab286f50431bdb30c633b8e63886
  	ret := gulu.Ret.NewResult()
  	defer c.JSON(http.StatusOK, ret)
  
-@@ -608,6 +608,31 @@ func getCloudUser(c *gin.Context) {
+@@ -608,6 +608,48 @@ func getCloudUser(c *gin.Context) {
  	ret.Data = model.Conf.GetUser()
  }
- 
+
 +func getCloudUser(c *gin.Context) {
 +	ret := gulu.Ret.NewResult()
 +	defer c.JSON(http.StatusOK, ret)
 +
-+ // 获取当前用户数据
-+	user := model.Conf.GetUser()
++	if !model.IsAdminRoleContext(c) {
++		return
++	}
++   originUser := model.Conf.GetUser()
++	user := &conf.User{
++			UserId: originUser.UserId,
++			UserName: originUser.UserName,
++			UserAvatarURL: originUser.UserAvatarURL,
++			UserHomeBImgURL: originUser.UserHomeBImgURL,
++			UserTitles: []*conf.UserTitle{},
++			UserIntro: originUser.UserIntro,
++			UserNickname: originUser.UserNickname,
++			UserCreateTime: "29991231 00:00:00",
++			UserSiYuanProExpireTime: -1,
++			UserToken: originUser.UserToken,
++			UserTokenExpireTime: "32503593600",
++			UserSiYuanRepoSize: 0,
++			UserSiYuanPointExchangeRepoSize: 0,
++			UserSiYuanAssetSize: 0,
++			UserTrafficUpload: 0,
++			UserTrafficDownload: 0,
++			UserTrafficAPIGet: 0,
++			UserTrafficAPIPut: 0,
++			UserTrafficTime: 0,
++			UserSiYuanSubscriptionPlan: 0,
++			UserSiYuanSubscriptionStatus: 0,
++			UserSiYuanSubscriptionType: 1,
++			UserSiYuanOneTimePayStatus: 1,
++	}
 +
-+ // 只修改订阅信息字段
-+	user.UserSiYuanSubscriptionPlan = 0
-+	user.UserSiYuanSubscriptionStatus = 0
-+	user.UserSiYuanSubscriptionType = 1
-+	user.UserSiYuanOneTimePayStatus = 1
-+ user.UserSiYuanProExpireTime = -1
-+ user.UserTokenExpireTime = "32503593600"
-+
-+ // 赋值回去
-+ model.Conf.User = user
-+ // 重新加密并保存
++	model.Conf.User = user
 +	data, _ := gulu.JSON.MarshalJSON(user)
 +	model.Conf.UserData = util.AESEncrypt(string(data))
 +	model.Conf.Save()

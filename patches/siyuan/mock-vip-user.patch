@@ -11,7 +11,7 @@ index 9010350078560bb298de72bc73d54e51db60f21b..dfe9ab286f50431bdb30c633b8e63886
  	ret := gulu.Ret.NewResult()
  	defer c.JSON(http.StatusOK, ret)
  
-@@ -608,6 +608,48 @@ func getCloudUser(c *gin.Context) {
+@@ -608,6 +608,60 @@ func getCloudUser(c *gin.Context) {
  	ret.Data = model.Conf.GetUser()
  }
 
@@ -22,6 +22,18 @@ index 9010350078560bb298de72bc73d54e51db60f21b..dfe9ab286f50431bdb30c633b8e63886
 +	if !model.IsAdminRoleContext(c) {
 +		return
 +	}
++
++	arg, ok := util.JsonArg(c, ret)
++	if !ok {
++		return
++	}
++
++	t := arg["token"]
++	var token string
++	if nil != t {
++		token = t.(string)
++	}
++	model.RefreshUser(token)
 +   originUser := model.Conf.GetUser()
 +	user := &conf.User{
 +			UserId: originUser.UserId,

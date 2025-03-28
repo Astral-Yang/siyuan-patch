@@ -4,12 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "release version/tag"
+        description: "Release version/tag"
         required: true
 
 jobs:
   build:
-    name: build
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v8]
     runs-on: ubuntu-latest
 
     permissions:
@@ -20,24 +22,20 @@ jobs:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
           android: true
           dotnet: true
           haskell: true
           large-packages: true
           docker-images: true
           swap-storage: true
+          tool-cache: false
 
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
           path: siyuan-note
 
-      - name: clone origin and apply patches
+      - name: Clone Siyuan Source and Apply Patches
         run: |
           mkdir -p ${{ github.workspace }}/go
           cd ${{ github.workspace }}/siyuan-note/
@@ -54,7 +52,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Setup Docker buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
@@ -63,9 +61,15 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_PWD }}
 
-      - name: Build the Docker image
+      - name: Build and Push Docker Image
         working-directory: ${{ github.workspace }}/siyuan-note/siyuan
         run: |
-          docker buildx build --push --platform linux/amd64 -t ${{ env.DOCKER_HUB_USER }}/siyuan:latest -t ${{ env.DOCKER_HUB_USER }}/siyuan:${{ github.event.inputs.version }} .
+          docker buildx build \
+            --push \
+            --platform ${{ matrix.platform }} \
+            --tag ${{ env.DOCKER_HUB_USER }}/siyuan:latest \
+            --tag ${{ env.DOCKER_HUB_USER }}/siyuan:${{ github.event.inputs.version }} \
+            --cache-from=type=registry,ref=${{ env.DOCKER_HUB_USER }}/siyuan:buildcache \
+            --cache-to=type=inline .
         env:
           DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USER }}

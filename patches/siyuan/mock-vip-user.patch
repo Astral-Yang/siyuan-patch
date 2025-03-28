@@ -40,7 +40,7 @@ index 9010350078560bb298de72bc73d54e51db60f21b..dfe9ab286f50431bdb30c633b8e63886
 +			UserName: originUser.UserName,
 +			UserAvatarURL: originUser.UserAvatarURL,
 +			UserHomeBImgURL: originUser.UserHomeBImgURL,
-+			UserTitles: []*conf.UserTitle{},
++			UserTitles: originUser.UserTitles,
 +			UserIntro: originUser.UserIntro,
 +			UserNickname: originUser.UserNickname,
 +			UserCreateTime: "29991231 00:00:00",

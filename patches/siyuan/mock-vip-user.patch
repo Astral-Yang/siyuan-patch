@@ -32,6 +32,8 @@ index 9010350078560bb298de72bc73d54e51db60f21b..dfe9ab286f50431bdb30c633b8e63886
 +	user.UserSiYuanSubscriptionType = 1
 +	user.UserSiYuanOneTimePayStatus = 1
 +
++ // 赋值回去
++ model.Conf.User = user
 +	// 重新加密并保存
 +	data, _ := gulu.JSON.MarshalJSON(user)
 +	model.Conf.UserData = util.AESEncrypt(string(data))

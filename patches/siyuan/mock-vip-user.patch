@@ -11,7 +11,7 @@ index 9010350078560bb298de72bc73d54e51db60f21b..dfe9ab286f50431bdb30c633b8e63886
  	ret := gulu.Ret.NewResult()
  	defer c.JSON(http.StatusOK, ret)
  
-@@ -608,6 +608,33 @@ func getCloudUser(c *gin.Context) {
+@@ -608,6 +608,35 @@ func getCloudUser(c *gin.Context) {
  	ret.Data = model.Conf.GetUser()
  }
  
@@ -23,18 +23,20 @@ index 9010350078560bb298de72bc73d54e51db60f21b..dfe9ab286f50431bdb30c633b8e63886
 +		return
 +	}
 +
-+ // 获取当前用户数据
++   // 获取当前用户数据
 +	user := model.Conf.GetUser()
 +
-+	// 只修改订阅信息字段
++   // 只修改订阅信息字段
 +	user.UserSiYuanSubscriptionPlan = 0
 +	user.UserSiYuanSubscriptionStatus = 0
 +	user.UserSiYuanSubscriptionType = 1
 +	user.UserSiYuanOneTimePayStatus = 1
++   user.UserSiYuanProExpireTime = -1
++   user.UserTokenExpireTime = "32503593600"
 +
-+ // 赋值回去
-+ model.Conf.User = user
-+	// 重新加密并保存
++   // 赋值回去
++   model.Conf.User = user
++   // 重新加密并保存
 +	data, _ := gulu.JSON.MarshalJSON(user)
 +	model.Conf.UserData = util.AESEncrypt(string(data))
 +	model.Conf.Save()

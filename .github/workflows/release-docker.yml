@@ -13,6 +13,8 @@ jobs:
       matrix:
         platform: [linux/amd64, linux/arm64]
     runs-on: ubuntu-latest
+    env:
+      GOPROXY: https://proxy.golang.org,direct
 
     permissions:
       packages: write

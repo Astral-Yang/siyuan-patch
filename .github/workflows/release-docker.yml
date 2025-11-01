@@ -65,7 +65,7 @@ jobs:
         working-directory: ${{ github.workspace }}/siyuan-note/siyuan
         run: |
           docker buildx build \
-            --build-arg GOPROXY=https://proxy.golang.org,direct
+            --build-arg GOPROXY=https://proxy.golang.org,direct \
             --push \
             --platform ${{ matrix.platform }} \
             --tag ${{ env.DOCKER_HUB_USER }}/siyuan:latest \

@@ -40,5 +40,6 @@ index ebd1002acf907e4afb3524fe5adcf672a850646b..1df2f4761587468cadf8f6d435738367
 +		Lang:                "zh_CN",
 +		CloseButtonBehavior: 1,
  		HideStatusBar:       false,
+ 		StatusBar:           &util.StatusBar{},
  	}
  }

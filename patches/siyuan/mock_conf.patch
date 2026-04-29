@@ -1,0 +1,19 @@
+--- forkSrcPrefix/kernel/model/conf.go
++++ forkDstPrefix/kernel/model/conf.go
+@@ -1018,15 +1018,7 @@
+ }
+ 
+ func IsPaidUser() bool {
+-	if IsSubscriber() {
+-		return true
+-	}
+-
+-	u := Conf.GetUser()
+-	if nil == u {
+-		return false
+-	}
+-	return 1 == u.UserSiYuanOneTimePayStatus
++	return true;
+ }
+ 
+ const (

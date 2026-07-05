@@ -1,3 +1,5 @@
+diff --git forkSrcPrefix/kernel/model/conf.go forkDstPrefix/kernel/model/conf.go
+index 3f7a55f..9b5c156 100644
 --- forkSrcPrefix/kernel/model/conf.go
 +++ forkDstPrefix/kernel/model/conf.go
 @@ -1119,15 +1118,7 @@

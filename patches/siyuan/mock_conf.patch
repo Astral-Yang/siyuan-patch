@@ -1,6 +1,7 @@
 --- forkSrcPrefix/kernel/model/conf.go
 +++ forkDstPrefix/kernel/model/conf.go
-@@ -1018,15 +1018,7 @@
+@@ -1119,15 +1118,7 @@
+ func IsSubscriber() bool {
  }
  
  func IsPaidUser() bool {
@@ -13,7 +14,7 @@
 -		return false
 -	}
 -	return 1 == u.UserSiYuanOneTimePayStatus
-+	return true;
++	return true
  }
  
  const (

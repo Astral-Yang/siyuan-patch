@@ -65,13 +65,6 @@ jobs:
       - name: Build and Push Docker Image
         working-directory: ${{ github.workspace }}/siyuan-note/siyuan
         run: |
-          docker buildx build \
-            --build-arg GOPROXY=https://proxy.golang.org,direct \
-            --push \
-            --platform ${{ matrix.platform }} \
-            --tag ${{ env.DOCKER_HUB_USER }}/siyuan:latest \
-            --tag ${{ env.DOCKER_HUB_USER }}/siyuan:${{ github.event.inputs.version }} \
-            --cache-from=type=registry,ref=${{ env.DOCKER_HUB_USER }}/siyuan:buildcache \
-            --cache-to=type=inline .
+          docker buildx build --push --platform linux/amd64,linux/arm64 --build-arg GOPROXY=https://proxy.golang.org,direct -t ${{ env.DOCKER_HUB_USER }}/siyuan:latest -t ${{ env.DOCKER_HUB_USER }}/siyuan:${{ github.event.inputs.version }} .
         env:
           DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USER }}

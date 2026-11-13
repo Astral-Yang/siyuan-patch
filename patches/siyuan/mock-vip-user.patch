@@ -1,8 +1,8 @@
 diff --git a/kernel/api/setting.go b/kernel/api/setting.go
-index 7e9c522..7344d05 100644
+index 7e9c522..7e86fcb 100644
 --- a/kernel/api/setting.go
 +++ b/kernel/api/setting.go
-@@ -463,18 +463,37 @@ var getPublish = contractHandler(apicontract.GetPublish, func(c *gin.Context, re
+@@ -463,24 +463,37 @@ var getPublish = contractHandler(apicontract.GetPublish, func(c *gin.Context, re
  })
  
  var getCloudUser = contractHandler(apicontract.GetCloudUser, func(c *gin.Context, request apicontract.SettingCloudUserRequest) apicontract.Response[*apicontract.SettingUser] {
@@ -44,14 +44,19 @@ index 7e9c522..7344d05 100644
 +		UserSiYuanSubscriptionType:      1,
 +		UserSiYuanOneTimePayStatus:      1,
 +	}
-+
-+	// 只在内存里 mock，不落盘、不写 conf.json；重启后由前端启动时的本次调用重建登录态
 +	model.Conf.SetUser(user)
-+
 +	return apicontract.Success(settingUserPayload(user))
  }, func(c *gin.Context) *apicontract.Response[*apicontract.SettingUser] {
- 	if model.IsAdminRoleContext(c) {
- 		return nil
+-	if model.IsAdminRoleContext(c) {
+-		return nil
+-	}
+-	ret := apicontract.Success((*apicontract.SettingUser)(nil))
+-	return &ret
++	// 本地 mock 构建：任何角色都放行，否则非 admin 会话会拿到空 user，前端仍会弹会员提示
++	return nil
+ })
+ 
+ var logoutCloudUser = contractHandler(apicontract.LogoutCloudUser, func(c *gin.Context, request apicontract.EmptyRequest) apicontract.Response[apicontract.Null] {
 diff --git a/kernel/model/cloud_service.go b/kernel/model/cloud_service.go
 index 3f8cdcd..b5c4baa 100644
 --- a/kernel/model/cloud_service.go

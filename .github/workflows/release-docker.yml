@@ -7,9 +7,22 @@ on:
         description: "Release version/tag"
         required: true
 
+concurrency:
+  group: release-docker-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
   build:
+    name: build ${{ matrix.arch }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: amd64
+          - platform: linux/arm64
+            arch: arm64
 
     permissions:
       packages: write
@@ -59,9 +72,67 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_PWD }}
 
-      - name: Build and Push Docker Image
+      - name: Resolve prebuilt ONNX runtime (official b3log/siyuan)
+        id: onnx
         working-directory: ${{ github.workspace }}/siyuan-note/siyuan
         run: |
-          docker buildx build --push --platform linux/amd64,linux/arm64 --build-arg GOPROXY=https://proxy.golang.org,direct -t ${{ env.DOCKER_HUB_USER }}/siyuan:latest -t ${{ env.DOCKER_HUB_USER }}/siyuan:${{ github.event.inputs.version }} .
-        env:
-          DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USER }}
+          set -euo pipefail
+          PLATFORM="${{ matrix.platform }}"
+          ARCH="${{ matrix.arch }}"
+          # 用 siyuan 自带脚本按当前 Dockerfile 计算 ONNX 输入指纹（与官方一致）
+          KEY=$(python3 -c 'import importlib.util,sys;from pathlib import Path;spec=importlib.util.spec_from_file_location("bdo","scripts/build-docker-onnx.py");m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);print(m.inputs(Path(".").resolve(),sys.argv[1])[0])' "$PLATFORM")
+          CANDIDATE="b3log/siyuan:onnx-${ARCH}-${KEY}"
+          echo "ONNX candidate: $CANDIDATE"
+          if docker buildx imagetools inspect "$CANDIDATE" >/dev/null 2>&1; then
+            echo "onnx_image=$CANDIDATE" >> "$GITHUB_OUTPUT"
+            echo "Reusing prebuilt ONNX: $CANDIDATE"
+          else
+            echo "onnx_image=" >> "$GITHUB_OUTPUT"
+            echo "::warning::Prebuilt ONNX not found ($CANDIDATE); falling back to building ONNX from source (slow)."
+          fi
+
+      - name: Build and push ${{ matrix.arch }} image
+        working-directory: ${{ github.workspace }}/siyuan-note/siyuan
+        run: |
+          set -euo pipefail
+          REPO="${{ secrets.DOCKER_HUB_USER }}/siyuan"
+          ONNX="${{ steps.onnx.outputs.onnx_image }}"
+          ARGS=(--push --provenance=false --platform "${{ matrix.platform }}"
+                --build-arg "GOPROXY=https://proxy.golang.org,direct"
+                --cache-from "type=registry,ref=${REPO}:buildcache-${{ matrix.arch }}"
+                --cache-to "type=registry,ref=${REPO}:buildcache-${{ matrix.arch }},mode=max"
+                -t "${REPO}:build-${{ matrix.arch }}")
+          if [ -n "${ONNX}" ]; then
+            ARGS+=(--build-arg "ONNX_IMAGE=${ONNX}")
+          fi
+          docker buildx build "${ARGS[@]}" .
+          echo "Pushed candidate: ${REPO}:build-${{ matrix.arch }}"
+
+  merge:
+    name: merge multi-arch manifest
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_PWD }}
+
+      - name: Create multi-arch manifest (latest + version)
+        run: |
+          set -euo pipefail
+          REPO="${{ secrets.DOCKER_HUB_USER }}/siyuan"
+          docker buildx imagetools create \
+            -t "${REPO}:latest" \
+            -t "${REPO}:${{ github.event.inputs.version }}" \
+            "${REPO}:build-amd64" \
+            "${REPO}:build-arm64"
+          echo "=== ${REPO}:${{ github.event.inputs.version }} ==="
+          docker buildx imagetools inspect "${REPO}:${{ github.event.inputs.version }}"

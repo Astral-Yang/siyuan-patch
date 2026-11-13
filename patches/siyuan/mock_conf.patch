@@ -1,7 +1,8 @@
-diff --git forkSrcPrefix/kernel/model/conf.go forkDstPrefix/kernel/model/conf.go
---- forkSrcPrefix/kernel/model/conf.go
-+++ forkDstPrefix/kernel/model/conf.go
-@@ -1327,15 +1327,7 @@ func IsSubscriber() bool {
+diff --git a/kernel/model/conf.go b/kernel/model/conf.go
+index 1c693fd..069014b 100644
+--- a/kernel/model/conf.go
++++ b/kernel/model/conf.go
+@@ -1169,15 +1169,8 @@ func IsSubscriber() bool {
  }
  
  func IsPaidUser() bool {
@@ -14,6 +15,7 @@ diff --git forkSrcPrefix/kernel/model/conf.go forkDstPrefix/kernel/model/conf.go
 -		return false
 -	}
 -	return 1 == u.UserSiYuanOneTimePayStatus
++	// 本地 mock 构建：始终视为已付费
 +	return true
  }
  
